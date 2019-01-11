@@ -25,23 +25,36 @@ def check_directory():
         os.makedirs("output")
 
 @autojit #This makes computation much faster
-def findEscape(c, max_iter):
+def findEscape(c, max_iter, set):
     z = complex(0, 0)
     i = 0
     while(abs(z)<2 and i < max_iter):
-        z = z*z + c
+        z = z * z + c
         i += 1
-    return i
+    if i <= max_iter: #It escaped
+        set[int(z.real), int(z.imag)] += 1
+        return True
+    return False #it did not escape
 
-def mandelbrot(height, width, max_iter, name = 'mandelbrot', cmap = 'magma'):
+def buddhabrot(height, width, max_iter, name = 'buddhabrot', cmap = 'magma'):
     check_directory()
     im_start, im_end = -1, 1
     re_start, re_end = -2, 1
     set = np.zeros((width, height))
-    for h, im in enumerate(np.linspace(im_start, im_end, height)):
-        for w, re in enumerate(np.linspace(re_start, re_end, width)):
-            set[w, h] = findEscape(complex(re, im), max_iter)
-    filename = f"output/{name}_{max_iter}_{cmap}_{width}x{height}.png"
+    # xpixels = np.arange(width)
+    # ypixels = np.arange(height)
+    ignore_x = []
+    ignore_y = []
+    for _ in range(1000):
+        w = np.random.randint(width)
+        h = np.random.randint(height)
+        if w not in ignore_x and h not in ignore_y:
+            escaped = findEscape(complex(w, h), max_iter, set)
+            if not escaped:
+                ignore_x.append(w)
+                ignore_y.append(h)
+    print(set)
+    filename = f"boutput/{name}_{max_iter}_{cmap}_{width}x{height}.png"
     plt.imsave(filename, set.T, format = "png", cmap = cmap)
     return filename
 
@@ -49,9 +62,9 @@ def main():
     start = time.time()
     figure(dpi = 600)
     width, height = 1920, 1080
-    max_iter = 100
+    max_iter = 10
     cmap = 'inferno'
-    filename = mandelbrot(height, width, max_iter, cmap = cmap)
+    filename = buddhabrot(height, width, max_iter, cmap = cmap)
     end = time.time()
     print(f"{filename} saved in time: {end-start}")
 
